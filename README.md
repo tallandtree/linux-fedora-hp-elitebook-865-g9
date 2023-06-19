@@ -75,7 +75,7 @@ sudo openfortivpn -c ~/forti_config
 
 ## Post configurations (not yet automated)
 
-Configure Follow-Me CCV Printer:
+Configure Follow-Me Printer:
 Open Cups Printer, add a new printer, select lpd, and enter the printer URL:
 
 Select the driver "Ricoh MP C3003 - CUPS+Gitenprint v5.3.4 Simplified (EN) and print a test page to find out the printer is correctly configured.
