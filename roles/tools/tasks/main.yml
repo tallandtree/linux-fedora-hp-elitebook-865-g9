@@ -1,0 +1,62 @@
+---
+- name: Get Fedora Version
+  command: "rpm -E %fedora"
+  register: fedora_version
+
+- name: Get Fedora kernel version
+  command: "uname -r"
+  register: fedora_kernel_version
+
+- name: Get base arch
+  command: "uname -m"
+  register: base_arch
+
+- name: Print Fedora Version
+  ansible.builtin.debug:
+    msg: "Fedora version: {{ fedora_version.stdout }} {{ fedora_kernel_version.stdout }}"
+
+- name: Importing keys
+  ansible.builtin.rpm_key:
+    state: present
+    key: "{{ item }}"
+  loop: "{{ rpm_keys }}"
+    
+- name: Upgrade all packages
+  ansible.builtin.dnf:
+    name: "*"
+    state: latest
+    update_cache: yes
+
+- name: Add yum repositories
+  ansible.builtin.yum_repository:
+    name: "{{ item.name }}"
+    description: "{{ item.description }}"
+    baseurl: "{{ item.baseurl }}"
+    gpgcheck: "{{ item.gpgcheck }}"
+    gpgkey: "{{ item.gpgkey | default(omit) }}"
+  loop: "{{ yum_repos }}"
+
+- name: Download rpm packages
+  ansible.builtin.get_url:
+    url: "{{ item.url }}"
+    dest: "{{ user_download }}"
+  loop: "{{ rpm_packages }}"
+
+- name: Install downloaded rpm packages
+  ansible.builtin.dnf:
+    name: "{{ user_download }}/{{ item.name }}"
+    state: present
+  loop: "{{ rpm_packages }}"
+
+- name: Install packages with dnf
+  ansible.builtin.dnf:
+    name: "{{ item }}"
+    state: latest
+    update_cache: yes
+  loop: "{{ dnf_packages }}"
+
+- name: Install packages with pip
+  ansible.builtin.pip:
+    name: "{{ item }}"
+  loop: "{{ pypi_packages }}"
+

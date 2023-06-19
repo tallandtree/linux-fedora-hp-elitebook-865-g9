@@ -1,0 +1,65 @@
+---
+# Teams, VirtualBox, Remmina, Calibre, FreeFileSync, VLC, Gimp, Chrome,
+# KeePassxc, IntelliJ, GoLand, PyCharm, Kazam, zoom
+
+yum_repos:
+  - name: virtualbox
+    description: Fedora VirtualBox
+    baseurl: 'http://download.virtualbox.org/virtualbox/rpm/fedora/36/{{ base_arch.stdout }}'
+    enabled: true
+    gpgcheck: true
+    gpgkey: 'https://www.virtualbox.org/download/oracle_vbox.asc'
+  - name: google-chrome
+    description: google-chrome repository
+    baseurl: 'http://dl.google.com/linux/chrome/rpm/stable/{{ base_arch.stdout }}'
+    enabled: true
+    gpgcheck: true
+    gpgkey: https://dl.google.com/linux/linux_signing_key.pub
+  - name: rpmsphere
+    description: RPM Sphere - Basearch
+    baseurl: https://github.com/rpmsphere/$basearch/raw/master/
+    skip_if_unavailable: True
+    gpgcheck: false
+    enabled: true
+  - name: rpmsphere-noarch
+    description: RPM Sphere - Noarch
+    baseurl: https://github.com/rpmsphere/noarch/raw/master/
+    skip_if_unavailable: True
+    gpgcheck: false
+    enabled: true
+
+rpm_keys:
+  - https://www.virtualbox.org/download/oracle_vbox.asc
+  - https://dl.google.com/linux/linux_signing_key.pub
+  - https://zoom.us/linux/download/pubkey?version=5-12-6
+
+dnf_packages:
+  - '@development-tools'
+  - google-chrome-stable
+  - dkms
+  - elfutils-libelf-devel
+  - qt5-qtx11extras
+  - "remmina*"
+  - freerdp
+  - VirtualBox
+  - virtualbox-guest-additions
+  - gimp
+  - filezilla
+  - keepassxc
+  - vlc
+  - python3-pip
+  - calibre
+  - kmod-v4l2loopback
+  - ffmpeg
+  - obs-studio
+  - krusader
+  - freefilesync
+  - java-17-openjdk
+  - java-17-openjdk-devel
+
+rpm_packages:
+  - name: zoom_x86_64.rpm
+    url: https://zoom.us/client/5.13.11.1288/zoom_x86_64.rpm
+
+pypi_packages:
+  - distutils-extra-python

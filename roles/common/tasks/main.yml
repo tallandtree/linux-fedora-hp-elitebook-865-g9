@@ -1,0 +1,146 @@
+---
+- name: Get Fedora Version
+  command: "rpm -E %fedora"
+  register: fedora_version
+
+- name: Get Fedora kernel version
+  command: "uname -r"
+  register: fedora_kernel_version
+
+- name: Print Fedora Version
+  ansible.builtin.debug:
+    msg: "Fedora version: {{ fedora_version.stdout }} {{ fedora_kernel_version.stdout }}"
+
+- name: Upgrade all packages
+  ansible.builtin.dnf:
+    name: "*"
+    state: latest
+    update_cache: true
+
+- name: Importing (free) key
+  ansible.builtin.rpm_key:
+    state: present
+    key: "{{ item }}"
+  loop:
+    - https://rpmfusion.org/keys?action=AttachFile&do=get&target=RPM-GPG-KEY-rpmfusion-free-fedora-2020
+    - https://rpmfusion.org/keys?action=AttachFile&do=get&target=RPM-GPG-KEY-rpmfusion-nonfree-fedora-2020
+
+- name: Install RPM Fusion Free
+  dnf:
+    name: "https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-{{ fedora_version.stdout }}.noarch.rpm"
+    state: present
+
+- name: Install RPM Fusion NonFree
+  dnf:
+    name: "https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-{{ fedora_version.stdout }}.noarch.rpm"
+    state: present
+
+- name: Install base packages
+  ansible.builtin.dnf:
+    name:
+      - dnf-plugins-core
+    state: latest
+    update_cache: yes
+
+- name: Add yum repositories
+  ansible.builtin.yum_repository:
+    name: "{{ item.name }}"
+    description: "{{ item.description }}"
+    baseurl: "{{ item.baseurl }}"
+    gpgcheck: "{{ item.gpgcheck }}"
+    gpgkey: "{{ item.gpgkey }}"
+  loop: "{{ yum_repos }}"
+
+- name: Install packages with dnf
+  ansible.builtin.dnf:
+    name:
+      - kernel-headers
+      - "kernel-devel-{{ fedora_kernel_version.stdout }}"
+      - make
+      - automake
+      - cmake
+      - gcc
+      - gcc-c++
+      - bc
+      - openfortivpn
+      - git
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+      - vim
+      - vim-X11
+    state: latest
+    update_cache: yes
+
+- name: Create useful directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: 0755
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+  loop:
+    - "/home/{{ ansible_user }}/bin"
+    - "/home/{{ ansible_user }}/GIT"
+    - "/home/{{ ansible_user }}/GIT/laptop"
+
+- name: Copy files and scripts
+  ansible.builtin.copy:
+    src: "files/{{ item }}/"
+    dest: "{{ user_home }}/{{ item }}/"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: preserve
+  loop:
+    - bin
+
+- name: Change default editor in user profile
+  ansible.builtin.lineinfile:
+    path: "{{ user_home }}/.bash_profile"
+    line: |
+      export EDITOR=vim
+      export CDPATH=.:..:~
+
+- name: Change default editor in user bashrc
+  ansible.builtin.lineinfile:
+    path: "{{ user_home }}/.bashrc"
+    line: |
+      alias vi=vim
+      set -o vi
+
+- name: Change nsswitch.conf for routing issues on xxxxx.local domains
+  ansible.builtin.lineinfile:
+    path: "/etc/nsswitch.conf"
+    regexp: '^hosts:'
+    line: 'hosts:      files myhostname mdns4_minimal [NOTFOUND=return] dns'
+
+- name: Allow main user to use sudo without passwd
+  ansible.builtin.lineinfile:
+    path: "/etc/sudoers.d/mysudoers"
+    regexp: '^{{ ansible_user }}'
+    line: |
+      {{ ansible_user }}	ALL=(ALL) NOPASSWD: ALL
+    create: yes
+    validate: /usr/sbin/visudo -cf %s
+
+- name: Add main user to docker group
+  ansible.builtin.user:
+    name: "{{ ansible_user }}"
+    groups: docker
+    append: yes
+
+- name: Create config file
+  ansible.builtin.template:
+    src: templates/vpn-forti/config.j2
+    dest: "{{ user_forti_config }}"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0600'
+
+- name: Dowload printer driver
+  ansible.builtin.get_url:
+    url: https://www.openprinting.org/ppd-o-matic.php?driver=PDF-Ricoh&printer=Ricoh-MP_C3003&show=0
+    dest: /usr/share/ppd/cupsfilters
+    timeout: 60

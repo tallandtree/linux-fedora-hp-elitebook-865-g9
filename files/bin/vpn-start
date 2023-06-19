@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+sudo openfortivpn -c ~/vpn-forti/config --insecure-ssl # --half-internet-routes 0

@@ -1,0 +1,46 @@
+ansible/secret
+log
+secret
+secret-test
+secret-prod
+passwd.yml
+.encfs.secret
+ansible.cfg
+*.retry
+hosts
+
+#-- python
+*.py[co]
+
+#-- vim
+[._]*.s[a-w][a-z]
+[._]s[a-w][a-z]
+*.un~
+Session.vim
+.netrwhist
+*~
+
+#-- Emacs
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+#-- SublimeText
+*.sublime-workspace
+#*.sublime-project
+
+#-- sftp configuration file
+sftp-config.json
+
+#-- vagrant
+*.box
+vagrant/builds
+vagrant/acs/.vagrant
+vagrant/acs/secrets/
+.vagrant
+vagrant/box_builder/ubuntu_box/packer
+vagrant/box_builder/ubuntu_box/packer_cache

@@ -1,0 +1,8 @@
+---
+user_wifi_project:
+  local: "{{ user_driver_dir }}/rtw89"
+  remote: https://github.com/lwfinger/rtw89
+
+user_displaylink_package:
+  version: "v5.7.0"
+  rpm_version: "1.13.1-1.x86_64"

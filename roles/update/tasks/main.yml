@@ -1,0 +1,78 @@
+---
+# To run this playbook, make sure the git repository is already checked out
+# or have a wired internet connection
+# It is recommended that you read the documentation on how to get https://github.com/lwfinger/rtw89
+# This playbook updates the installation to latest and reinstalls the wifi drivers
+
+- name: Get Fedora Version
+  command: "rpm -E %fedora"
+  register: fedora_version
+
+- name: Get Fedora kernel version
+  command: "uname -r"
+  register: fedora_kernel_version
+
+- name: Upgrade all packages
+  ansible.builtin.dnf:
+    name: "*"
+    state: latest
+    update_cache: true
+
+- name: Check if wifi drivers already downloaded
+  ansible.builtin.stat:
+    path: "{{ user_wifi_project.local }}"
+  register: wifi_project
+
+- name: Clone or update the wifi adapters repo
+  ansible.builtin.git:
+    repo: "{{ user_wifi_project.remote }}"
+    dest: "{{ user_wifi_project.local }}"
+    update: true
+  when: wifi_project.stat.exists
+
+- name: Build the wifi drivers
+  community.general.make:
+    chdir: "{{ user_wifi_project.local }}"
+
+- name: Install the wifi drivers
+  community.general.make:
+    chdir: "{{ user_wifi_project.local }}"
+    target: install
+  become: true
+
+- name: Check if displaylink already installed
+  shell: dnf info --installed | grep displaylink
+  register: displaylink_installed
+  ignore_errors: true
+
+- when: displaylink_installed.rc == 0
+  name: Remove displaylink
+  ansible.builtin.dnf:
+    name: "displaylink"
+    state: absent
+
+- name: Dowload displaylink
+  ansible.builtin.get_url:
+    url: "https://github.com/displaylink-rpm/displaylink-rpm/releases/download/{{ user_displaylink_package.version }}/fedora-{{ fedora_version.stdout }}-displaylink-{{ user_displaylink_package.rpm_version }}.rpm"
+    dest: "{{ user_download }}/fedora-{{ fedora_version.stdout }}-displaylink-{{ user_displaylink_package.rpm_version }}.rpm"
+    timeout: 60
+
+- name: Install displaylink
+  ansible.builtin.dnf:
+    name: "{{ user_download }}/fedora-{{ fedora_version.stdout }}-displaylink-{{ user_displaylink_package.rpm_version }}.rpm"
+    state: present
+    disable_gpg_check: true
+
+# More on it here: https://wiki.archlinux.org/title/Laptop/HP
+- name: Blacklist the module that causes problems with PCIE, WIFI and Bluetooth
+  ansible.builtin.lineinfile:
+    path: /etc/modprobe.d/blacklist_hp_wmi.conf
+    line: blacklist hp_wmi
+    create: yes
+      #
+# Fix (hopefully) the flickering of the screen due to mouse movements
+- name: Set SWCursor to off in displaylink configuration
+  ansible.builtin.copy:
+    src: files/X11/20-displaylink.conf
+    dest: /etc/X11/xorg.conf.d/20-displaylink.conf
+    backup: true

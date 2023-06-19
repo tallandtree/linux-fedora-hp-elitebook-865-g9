@@ -1,0 +1,21 @@
+---
+# Main playbook
+- name: Install laptop
+  hosts: [ 'all' ]
+  become: yes
+  vars:
+    new: False
+    update: False
+    tools: False
+    ansible_password: '{{ sudo_password }}'
+    ansible_become_pass: '{{ sudo_password }}'
+
+  roles:
+  - when: (new|bool)
+    role: common
+
+  - when: (new|bool or update|bool)
+    role: update
+
+  - when: (tools|bool)
+    role: tools

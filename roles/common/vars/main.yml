@@ -1,0 +1,14 @@
+---
+yum_repos:
+  - name: 'docker-ce-stable'
+    description: Docker CE Stable
+    baseurl: 'https://download.docker.com/linux/fedora/$releasever/$basearch/stable'
+    enabled: true
+    gpgcheck: true
+    gpgkey: 'https://download.docker.com/linux/fedora/gpg'
+  - name: 'google-chrome'
+    description: Google Chrome Stable
+    baseurl: 'https://dl.google.com/linux/chrome/rpm/stable/x86_64'
+    enabled: true
+    gpgcheck: true
+    gpgkey: 'https://dl.google.com/linux/linux_signing_key.pub'
