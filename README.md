@@ -79,4 +79,4 @@ Configure Follow-Me Printer:
 Open Cups Printer, add a new printer, select lpd, and enter the printer URL:
 
 Select the driver "Ricoh MP C3003 - CUPS+Gitenprint v5.3.4 Simplified (EN) and print a test page to find out the printer is correctly configured.
-For the Follow-Me printer to work, your local username must match your CCVEU username.
+For the Follow-Me printer to work, your local username must match your company username.
